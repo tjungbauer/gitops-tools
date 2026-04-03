@@ -1,0 +1,139 @@
+# Build tools image (linux/amd64) and push to Quay.io.
+#
+# GitHub only loads workflows from .github/workflows at the repository root. If this repo is a
+# monorepo, move this file to the root .github/workflows/ and set build context to the tools dir:
+#   context: ./tools
+#   file: ./tools/Dockerfile
+#
+# Release tags come from the VERSION file (single line MAJOR.MINOR.PATCH).
+#
+# Push to main/master:
+#   - Runs only when VERSION changed (paths filter).
+#   - Pushes :$VERSION, :latest, and :sha-<short> on the default branch.
+#   - Other branches: :sha-<short> only.
+#
+# Pull request:
+#   - Builds (no push) when VERSION, Dockerfile, or related inputs change.
+#
+# workflow_dispatch:
+#   - Same tagging rules as push (default branch → :$VERSION, :latest, :sha).
+#
+# Secrets: QUAY_USERNAME, QUAY_PASSWORD (Quay robot account).
+# Cosign: keyless sign after push (requires id-token: write).
+name: Container image
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - "VERSION"
+  pull_request:
+    branches: [main, master]
+    paths:
+      - "VERSION"
+      - "Dockerfile"
+      - "siege.conf"
+      - ".github/workflows/container-image.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  REGISTRY: quay.io
+  # Quay repository for this image (change if you use a different name).
+  IMAGE_SLUG: tjungbau/gitops-tools
+
+jobs:
+  build-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Read VERSION and compute tags
+        id: meta
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          set -euo pipefail
+          if [ ! -f VERSION ]; then
+            echo "::error file=VERSION::VERSION file is missing at repository root"
+            exit 1
+          fi
+          V=$(tr -d '[:space:]' < VERSION)
+          if ! [[ "$V" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::VERSION must be a single line semver: MAJOR.MINOR.PATCH (got '$V')"
+            exit 1
+          fi
+          echo "version=$V" >> "$GITHUB_OUTPUT"
+          echo "Semver from VERSION file: $V"
+
+          IMG="${{ env.REGISTRY }}/${{ env.IMAGE_SLUG }}"
+          SHA_SHORT=$(echo "${{ github.sha }}" | cut -c1-7)
+          REF="${{ github.ref }}"
+
+          {
+            echo "tags<<EOF"
+            if [ "${{ github.event_name }}" = "pull_request" ]; then
+              echo "${IMG}:pr-${{ github.event.pull_request.number }}"
+            elif [ "$REF" = "refs/heads/${DEFAULT_BRANCH}" ]; then
+              echo "${IMG}:${V}"
+              echo "${IMG}:latest"
+              echo "${IMG}:sha-${SHA_SHORT}"
+            else
+              echo "${IMG}:sha-${SHA_SHORT}"
+            fi
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+          {
+            echo "labels<<EOF"
+            echo "org.opencontainers.image.version=${V}"
+            echo "org.opencontainers.image.revision=${{ github.sha }}"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Quay.io
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.QUAY_USERNAME }}
+          password: ${{ secrets.QUAY_PASSWORD }}
+
+      - name: Build and push
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          platforms: linux/amd64
+          provenance: false
+          sbom: false
+
+      - name: Install Cosign
+        if: github.event_name != 'pull_request'
+        uses: sigstore/cosign-installer@v4.1.1
+        with:
+          cosign-release: v2.4.1
+
+      - name: Sign image with Cosign (keyless)
+        if: github.event_name != 'pull_request'
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          test -n "$DIGEST"
+          IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_SLUG }}@${DIGEST}"
+          echo "Signing $IMAGE"
+          cosign sign --yes "$IMAGE"
