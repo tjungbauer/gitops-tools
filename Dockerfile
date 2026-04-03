@@ -1,12 +1,16 @@
 # 1. Base Image: UBI 9 (Provides GLIBC 2.34, solving the 2.32 requirement)
 FROM registry.access.redhat.com/ubi9-minimal:latest
 
-# 2. Updated Build Arguments
-ARG ARGO_CD_CLI_VERSION=3.3.2
+# 2. Updated build arguments
+#    Argo CD: bump to pick up fixed deps (e.g. grpc >= 1.79.3 for GHSA-p77j-4mvh-x3m3 in the argocd binary).
+ARG ARGO_CD_CLI_VERSION=3.3.6
 ARG HELM_VERSION=3.19.4
 ARG KUSTOMIZE_VERSION=5.8.1
 ARG ROLLOUTS_VERSION=1.8.4
 ARG POLICYGEN_VERSION=1.17.1
+# Pin OpenShift client (oc/kubectl) to a release line that matches your cluster, e.g. 4.17.12.
+# "stable" tracks current stable and can still embed older k8s.io/kubernetes in the binary — scanners may flag it.
+ARG OCP_CLIENT_VERSION=stable
 
 # Labels
 LABEL name="custom-argocd-cmp-ubi9" \
@@ -38,8 +42,8 @@ RUN useradd --no-log-init -r -u 999 -g 0 -m -d /home/argocd argocd && \
 
 # 5. Download and Install Tooling
 RUN mkdir -p /tmp/tools && \
-    # OpenShift & Kubectl (Stable)
-    curl -fsSL https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/stable/openshift-client-linux-amd64-rhel9.tar.gz -o /tmp/tools/oc.tar.gz && \
+    # OpenShift & kubectl (see OCP_CLIENT_VERSION)
+    curl -fsSL "https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/${OCP_CLIENT_VERSION}/openshift-client-linux-amd64-rhel9.tar.gz" -o /tmp/tools/oc.tar.gz && \
     tar -xvf /tmp/tools/oc.tar.gz -C /usr/local/bin/ oc kubectl && \
     # ArgoCD CLI
     curl -fsSL https://github.com/argoproj/argo-cd/releases/download/v${ARGO_CD_CLI_VERSION}/argocd-linux-amd64 -o /usr/local/bin/argocd && \
