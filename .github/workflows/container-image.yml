@@ -32,7 +32,6 @@ on:
     paths:
       - "VERSION"
       - "Dockerfile"
-      - "siege.conf"
       - ".github/workflows/container-image.yml"
   workflow_dispatch:
 

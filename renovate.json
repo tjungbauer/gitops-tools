@@ -5,5 +5,75 @@
     "schedule:earlyMondays"
   ],
   "bumpVersion": "patch",
-  "prHourlyLimit": 4
+  "prHourlyLimit": 4,
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Argo CD CLI — github.com/argoproj/argo-cd releases (vX.Y.Z)",
+      "managerFilePatterns": ["(^|/)Dockerfile$"],
+      "matchStrings": ["ARG ARGO_CD_CLI_VERSION=(?<currentValue>\\S+)"],
+      "depNameTemplate": "argoproj/argo-cd",
+      "datasourceTemplate": "github-releases",
+      "extractVersionTemplate": "^v(?<version>.+)$",
+      "versioningTemplate": "semver"
+    },
+    {
+      "customType": "regex",
+      "description": "Helm 3 — github.com/helm/helm (exclude v4 via packageRules)",
+      "managerFilePatterns": ["(^|/)Dockerfile$"],
+      "matchStrings": ["ARG HELM_VERSION=(?<currentValue>\\S+)"],
+      "depNameTemplate": "helm/helm",
+      "datasourceTemplate": "github-releases",
+      "extractVersionTemplate": "^v(?<version>.+)$",
+      "versioningTemplate": "semver"
+    },
+    {
+      "customType": "regex",
+      "description": "Kustomize — tags are kustomize/vX.Y.Z",
+      "managerFilePatterns": ["(^|/)Dockerfile$"],
+      "matchStrings": ["ARG KUSTOMIZE_VERSION=(?<currentValue>\\S+)"],
+      "depNameTemplate": "kubernetes-sigs/kustomize",
+      "datasourceTemplate": "github-releases",
+      "extractVersionTemplate": "^kustomize\\/v(?<version>.+)$",
+      "versioningTemplate": "semver"
+    },
+    {
+      "customType": "regex",
+      "description": "Argo Rollouts kubectl plugin",
+      "managerFilePatterns": ["(^|/)Dockerfile$"],
+      "matchStrings": ["ARG ROLLOUTS_VERSION=(?<currentValue>\\S+)"],
+      "depNameTemplate": "argoproj/argo-rollouts",
+      "datasourceTemplate": "github-releases",
+      "extractVersionTemplate": "^v(?<version>.+)$",
+      "versioningTemplate": "semver"
+    },
+    {
+      "customType": "regex",
+      "description": "ACM policy-generator-plugin",
+      "managerFilePatterns": ["(^|/)Dockerfile$"],
+      "matchStrings": ["ARG POLICYGEN_VERSION=(?<currentValue>\\S+)"],
+      "depNameTemplate": "open-cluster-management-io/policy-generator-plugin",
+      "datasourceTemplate": "github-releases",
+      "extractVersionTemplate": "^v(?<version>.+)$",
+      "versioningTemplate": "semver"
+    },
+    {
+      "customType": "regex",
+      "description": "yq (mikefarah) — static binary",
+      "managerFilePatterns": ["(^|/)Dockerfile$"],
+      "matchStrings": ["ARG YQ_VERSION=(?<currentValue>\\S+)"],
+      "depNameTemplate": "mikefarah/yq",
+      "datasourceTemplate": "github-releases",
+      "extractVersionTemplate": "^v(?<version>.+)$",
+      "versioningTemplate": "semver"
+    }
+  ],
+  "packageRules": [
+    {
+      "description": "Stay on Helm 3 until charts/workflows are validated for Helm 4",
+      "matchDatasources": ["github-releases"],
+      "matchPackageNames": ["helm/helm"],
+      "allowedVersions": "<4.0.0"
+    }
+  ]
 }

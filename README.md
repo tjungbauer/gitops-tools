@@ -11,8 +11,7 @@ Roughly, you get:
 - **Kustomize** — building manifests, including the **policy generator** plugin for Open Cluster Management–style workflows  
 - **Argo CD CLI** (`argocd`)  
 - **Argo Rollouts** kubectl plugin (`kubectl-argo-rollouts`)  
-- **Siege** — simple HTTP load testing (with a bundled config file)  
-- **Everyday utilities** — for example `git`, `jq`, `yq`, `tar`, `find`, and `gettext` (handy for scripts and templates)
+- **Everyday utilities** — for example `git`, `jq`, **`yq`** (mikefarah/yq release binary), `tar`, `find`, and `gettext` (handy for scripts and templates)
 
 Exact versions are defined in the `Dockerfile` when the image is built. The image version for published builds is taken from the **`VERSION`** file in this folder.
 
