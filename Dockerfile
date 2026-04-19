@@ -8,7 +8,7 @@ FROM registry.access.redhat.com/ubi9-minimal:latest
 # Dockerfile; refresh by bumping releases when vendors publish rebuilt binaries. Rebuild the image after bumps.
 #
 # Argo CD CLI — use latest stable from https://github.com/argoproj/argo-cd/releases
-ARG ARGO_CD_CLI_VERSION=3.3.6
+ARG ARGO_CD_CLI_VERSION=3.3.7
 # Helm 3 line — https://github.com/helm/helm/releases (avoid Helm 4 unless charts are validated for it)
 ARG HELM_VERSION=3.20.2
 ARG KUSTOMIZE_VERSION=5.8.1
