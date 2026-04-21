@@ -12,6 +12,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). The
 
 ## Releases
 
+### [1.0.4] - 2026-04-21
+
+- Switched OpenShift CLI (oc) to "latest"
+
 ### [1.0.3] — 2026-04-19
 
 - **ArgoCD CLI** updated to 3.3.7
