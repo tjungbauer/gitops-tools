@@ -12,6 +12,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). The
 
 ## Releases
 
+### [1.0.6] - 2026-05-15
+
+ - Update Helm to 3.21.0
+ - Update argocd-cli to 3.3.10
+ - Removed: PolyGen and ArgoCD Rollout
+
 ### [1.0.5] - 2026-05-01
 
 - Update argocdcli to 3.3.9
