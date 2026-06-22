@@ -12,6 +12,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). The
 
 ## Releases
 
+### [1.0.7] - 2ß26-06-22
+
+- Update Helm to 3.21.2
+- Update ArgoCD to 3.3.12
+
 ### [1.0.6] - 2026-05-15
 
  - Update Helm to 3.21.0
