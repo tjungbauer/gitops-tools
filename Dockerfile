@@ -8,13 +8,13 @@ FROM registry.access.redhat.com/ubi9-minimal:latest
 # Dockerfile; refresh by bumping releases when vendors publish rebuilt binaries. Rebuild the image after bumps.
 #
 # Argo CD CLI — use latest stable from https://github.com/argoproj/argo-cd/releases
-ARG ARGO_CD_CLI_VERSION=3.4.5
+ARG ARGO_CD_CLI_VERSION=3.5.5
 # Helm 3 line — https://github.com/helm/helm/releases (avoid Helm 4 unless charts are validated for it)
-ARG HELM_VERSION=3.21.3
-ARG KUSTOMIZE_VERSION=5.8.1
-ARG ROLLOUTS_VERSION=1.9.1
+ARG HELM_VERSION=3.22.1
+ARG KUSTOMIZE_VERSION=5.8.3
+ARG ROLLOUTS_VERSION=1.10.1
 ARG POLICYGEN_VERSION=1.19.0
-ARG YQ_VERSION=4.52.5
+ARG YQ_VERSION=4.54.1
 ARG OCP_CLIENT_VERSION=latest
 
 # Labels
@@ -115,6 +115,6 @@ INSTALL
 RUN chgrp -R 0 /home/argocd && \
     chmod -R g=u /home/argocd
 
-USER 999
+USER 1001
 WORKDIR /home/argocd
 CMD ["/bin/bash"]
